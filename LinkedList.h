@@ -135,9 +135,30 @@ public:
         return temp -= rhs;
     }
 
-    friend difference_type operator- (const RandomAccessIterator& a, const RandomAccessIterator& b) {
+    friend difference_type operator- (RandomAccessIterator& a, RandomAccessIterator& b) {
         difference_type n = 0;
-        while (a + n != b) n++;
+
+        pointer tempA = a.current;
+        pointer tempB = b.current;
+
+        while (a.current != b.current && b.current != nullptr) {
+            n++;
+            b.current = b.current->next;
+        }
+        if (b.current == nullptr) {
+            n = 0;
+
+            a.current = tempA;
+            b.current = tempB;
+
+            while (a.current != b.current) {
+                n--;
+                a.current = a.current->next;
+            }
+        }
+
+        a.current = tempA;
+        b.current = tempB;
         return n;
     }
 
@@ -164,22 +185,22 @@ public:
         return current != other.current;
     }
 
-    friend bool operator< (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    friend bool operator< (RandomAccessIterator& a, RandomAccessIterator& b)
     {
         return b - a > 0;
     }
 
-    friend bool operator> (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    friend bool operator> (RandomAccessIterator& a, RandomAccessIterator& b)
     {
         return b < a;
     }
 
-    friend bool operator>= (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    friend bool operator>= (RandomAccessIterator& a, RandomAccessIterator& b)
     {
         return !(a < b);
     }
 
-    friend bool operator<= (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    friend bool operator<= (RandomAccessIterator& a, RandomAccessIterator& b)
     {
         return !(a > b);
     }
