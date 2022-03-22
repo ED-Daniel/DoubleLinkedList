@@ -15,6 +15,9 @@ public:
     using PointerType = ValueType*;
     using ReferenceType = ValueType&;
 
+    using difference_type = ListNode;
+    using iterator_category = std::forward_iterator_tag;
+
     ListIterator(PointerType ptr) : current(ptr) {}
 
     ListIterator& operator++() {
@@ -65,6 +68,124 @@ public:
 
 private:
     PointerType current;
+};
+
+template<typename ListNode>
+class RandomAccessIterator {
+public:
+    template<typename T>
+    friend struct std::iterator_traits;
+    using node_type = typename ListNode::ValueType;
+    using node_reference = node_type&;
+    using value_type = ListNode;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+    using iterator_category = std::random_access_iterator_tag;
+
+    explicit RandomAccessIterator(pointer ptr) : current(ptr) {}
+
+    RandomAccessIterator& operator++() {
+        current = current->next;
+        return (*this);
+    }
+
+    RandomAccessIterator operator++(int) {
+        RandomAccessIterator iterator = *this;
+        current = current->next;
+        return iterator;
+    }
+
+    RandomAccessIterator& operator--() {
+        current = current->previous;
+        return (*this);
+    }
+
+    RandomAccessIterator operator--(int) {
+        RandomAccessIterator iterator = *this;
+        current = current->previous;
+        return iterator;
+    }
+
+    friend RandomAccessIterator& operator+= (RandomAccessIterator& lhs, difference_type rhs)
+    {
+        difference_type m = rhs;
+        if (m >= 0) while (m--) ++lhs;
+        else while (m++) --lhs;
+        return lhs;
+    }
+
+    friend RandomAccessIterator operator+ (RandomAccessIterator lhs, difference_type rhs) {
+        RandomAccessIterator temp = lhs;
+        return temp += rhs;
+    }
+
+    friend RandomAccessIterator operator+ (difference_type lhs, RandomAccessIterator rhs) {
+        RandomAccessIterator temp = rhs;
+        return temp += lhs;
+    }
+
+    friend RandomAccessIterator& operator-= (RandomAccessIterator& lhs, difference_type rhs)
+    {
+        return lhs += -rhs;
+    }
+
+    friend RandomAccessIterator operator- (RandomAccessIterator i, difference_type rhs) {
+        RandomAccessIterator temp = i;
+        return temp -= rhs;
+    }
+
+    friend difference_type operator- (const RandomAccessIterator& a, const RandomAccessIterator& b) {
+        difference_type n = 0;
+        while (a + n != b) n++;
+        return n;
+    }
+
+    reference operator[] (int index) {
+        for (int i = 0; i < index; ++i) {
+            current = current->next;
+        }
+        return current;
+    }
+
+    pointer operator->() {
+        return current;
+    }
+
+    node_type& operator*() {
+        return current->data;
+    };
+
+    bool operator==(const RandomAccessIterator& other) const {
+        return current == other.current;
+    }
+
+    bool operator!=(const RandomAccessIterator& other) const {
+        return current != other.current;
+    }
+
+    friend bool operator< (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    {
+        return b - a > 0;
+    }
+
+    friend bool operator> (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    {
+        return b < a;
+    }
+
+    friend bool operator>= (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    {
+        return !(a < b);
+    }
+
+    friend bool operator<= (const RandomAccessIterator& a, const RandomAccessIterator& b)
+    {
+        return !(a > b);
+    }
+
+private:
+    pointer current;
 };
 
 template<typename ListNode>
@@ -173,6 +294,7 @@ private:
 public:
     using Iterator = ListIterator<ListNode<T>>;
     using ReversedIterator = ReversedListIterator<ListNode<T>>;
+    using RandomAccessIterator = RandomAccessIterator<ListNode<T>>;
 
     LinkedList() : head(nullptr) {}
     ~LinkedList() {
@@ -197,6 +319,16 @@ public:
 
     ReversedIterator r_end() {
         return ReversedIterator(head->previous);
+    }
+
+    RandomAccessIterator ra_begin() {
+        return RandomAccessIterator(head);
+    }
+
+    RandomAccessIterator ra_end() {
+        ListNode<T> * current = head;
+        while (current != nullptr) current = current->next;
+        return RandomAccessIterator (current);
     }
 
     size_t size() {
@@ -383,6 +515,13 @@ public:
             swap(i, listSize - i - 1);
         }
     }
+
+    LinkedList<T>& operator=(const LinkedList<T> & other){
+        auto cpy = other;
+        std::swap(*this, cpy);
+        return *this;
+    }
+
 private:
     ListNode<T> * head;
 };
